@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str
-    #secret_key: str
+    secret_key: str
     #aws_access_key_id: str
     #aws_secret_access_key: str
     #aws_bucket_name: str

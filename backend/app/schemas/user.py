@@ -3,8 +3,11 @@ from typing import Optional
 
 class UserCreate(BaseModel):
     email : str
-    provider: str = "email"
-    password: Optional[str] = None
+    provider : str = "email"
+    password : Optional[str] = None
+
+class UserUpdate(BaseModel):
+    newPassowrd : Optional[str] = None
 
 class LoginResponse(BaseModel):
     access_token : str
