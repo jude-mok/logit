@@ -1,1 +1,22 @@
 .DS_Store
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Uploads
+uploads/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
