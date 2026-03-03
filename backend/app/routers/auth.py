@@ -16,10 +16,6 @@ router = APIRouter(tags=["auth"])
 
 @router.post("/signin", response_model=LoginResponse)
 async def sign_in(request: LoginRequest, db: Session = Depends(get_db)):
-    """
-    Authenticate user with email and password.
-    Returns access and refresh tokens on successful authentication.
-    """
     db_exist = db.query(User).filter(User.email == request.email).first()
     if not db_exist:
         raise HTTPException(status_code = 404, detail = "Wrong email or password.")
