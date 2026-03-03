@@ -1,2 +1,2 @@
 from app.models.moment import Moment
-from app.models.user import Users
+from app.models.user import User

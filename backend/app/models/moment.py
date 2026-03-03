@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, BigInteger, ForeignKey
 from app.database import Base
 
 class Moment(Base):
-    __tablename__ = "moment"
+    __tablename__ = "moments"
     id = Column(Integer, primary_key=True, index=True)
     image_path = Column(String, nullable=False)
     comment = Column(String, nullable=True)

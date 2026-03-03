@@ -6,7 +6,7 @@ from datetime import datetime,timedelta,UTC
 secret_key = settings.secret_key
 algorithm = "HS256"
 
-pwd_context = CryptContext(schemes=["bycrypt"])
+pwd_context = CryptContext(schemes=["bcrypt"])
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
