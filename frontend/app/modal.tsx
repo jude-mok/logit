@@ -42,7 +42,7 @@ export default function AddMomentModal() {
       const allowed = await canUploadToday();
       setCanUpload(allowed);
       if (!allowed) {
-        setError("You've already shared today's moment. Come back tomorrow!");
+        setError("You've already saved today's moment. Come back tomorrow!");
       }
     };
     checkUploadLimit();
@@ -51,7 +51,7 @@ export default function AddMomentModal() {
   /** Open image picker to select from photo library */
   const pickImage = async () => {
     if (canUpload === false) {
-      setError("You've already shared today's moment. Come back tomorrow!");
+      setError("You've already saved today's moment. Come back tomorrow!");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -72,7 +72,7 @@ export default function AddMomentModal() {
   /** Launch camera to capture a new photo */
   const takePhoto = async () => {
     if (canUpload === false) {
-      setError("You've already shared today's moment. Come back tomorrow!");
+      setError("You've already saved today's moment. Come back tomorrow!");
       return;
     }
 
@@ -111,7 +111,7 @@ export default function AddMomentModal() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save moment';
       if (message.includes('one moment per day')) {
-        setError("You've already shared today's moment. Come back tomorrow!");
+        setError("You've already saved today's moment. Come back tomorrow!");
       } else {
         setError('Something went wrong. Please try again.');
       }

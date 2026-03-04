@@ -11,12 +11,11 @@ from google.auth.transport import requests as google_requests
 from app.config import settings
 
 
-router = APIRouter(tags=["auth"])
-
+router = APIRouter(prefix= "/auth", tags=["auth"])
 
 @router.post("/signin", response_model=LoginResponse)
 async def sign_in(request: LoginRequest, db: Session = Depends(get_db)):
-    db_exist = db.query(User).filter(User.email == request.email).first()
+    db_exist = db.query(User).filter(User.user_name == request.user_name).first()
     if not db_exist:
         raise HTTPException(status_code = 404, detail = "Wrong email or password.")
     

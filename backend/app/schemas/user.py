@@ -8,8 +8,9 @@ class UserCreate(BaseModel):
     user_name : str
 
 class UserUpdate(BaseModel):
-    user_name : str
-    new_passowrd : Optional[str] = None
+    user_name : Optional[str] = None
+    current_password : Optional[str] = None
+    new_password : Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -23,11 +24,8 @@ class LoginResponse(BaseModel):
     token_type : str = "bearer"
 
 class LoginRequest(BaseModel):
-    email : str
+    user_name : str
     password : str
-
-class DeleteRequest(BaseModel):
-    email : str
 
 class GoogleLoginRequest(BaseModel):
     id_token: str

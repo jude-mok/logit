@@ -89,7 +89,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
+    gap: 40,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#f3f4f6',
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   tabButton: {
-    flex: 1,
+    width: 72,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   addButton: {
-    flex: 1,
+    width: 72,
     alignItems: 'center',
     marginTop: -32,
   },

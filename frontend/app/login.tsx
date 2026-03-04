@@ -25,21 +25,21 @@ import { signIn } from '@/services/api';
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   /** Validate credentials and authenticate user */
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter email and password');
+    if (!userName || !password) {
+      Alert.alert('Error', 'Please enter username and password');
       return;
     }
 
     setIsLoading(true);
     try {
-      await signIn({ email, password });
+      await signIn({ user_name: userName, password });
       router.replace('/(tabs)');
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to sign in');
@@ -67,14 +67,13 @@ export default function LoginScreen() {
         <Text style={styles.logo}>LOGIT</Text>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>EMAIL</Text>
+          <Text style={styles.label}>USERNAME</Text>
           <TextInput
             style={styles.input}
-            placeholder="your@email.com"
+            placeholder="Enter your username"
             placeholderTextColor="#9ca3af"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+            value={userName}
+            onChangeText={setUserName}
             autoCapitalize="none"
             autoCorrect={false}
           />
