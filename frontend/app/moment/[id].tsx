@@ -15,12 +15,13 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Moment, getImageUrl, toggleStar, deleteMoment } from '@/services/api';
+import { Moment, getImageUrl, toggleStar, deleteMoment, editComment } from '@/services/api';
 
 export default function MomentDetailScreen() {
   const { id, momentData } = useLocalSearchParams<{ id: string; momentData?: string }>();
@@ -29,6 +30,9 @@ export default function MomentDetailScreen() {
   const [moment, setMoment] = useState<Moment | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageAspectRatio, setImageAspectRatio] = useState(3 / 4);
+  const [editingComment, setEditingComment] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [savingComment, setSavingComment] = useState(false);
 
   // Parse moment data passed from previous screen
   useEffect(() => {
@@ -59,6 +63,25 @@ export default function MomentDetailScreen() {
       setMoment(updated);
     } catch (error) {
       Alert.alert('Error', 'Failed to update star status');
+    }
+  };
+
+  const handleEditComment = () => {
+    setEditText(moment?.comment || '');
+    setEditingComment(true);
+  };
+
+  const handleSaveComment = async () => {
+    if (!moment) return;
+    setSavingComment(true);
+    try {
+      const updated = await editComment(moment.id, editText);
+      setMoment(updated);
+      setEditingComment(false);
+    } catch {
+      Alert.alert('Error', 'Failed to save comment');
+    } finally {
+      setSavingComment(false);
     }
   };
 
@@ -158,11 +181,39 @@ export default function MomentDetailScreen() {
           </Pressable>
         </View>
 
-        {moment.comment && (
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionText}>{moment.comment}</Text>
-          </View>
-        )}
+        <View style={styles.descriptionContainer}>
+          {editingComment ? (
+            <View style={styles.editCommentBox}>
+              <TextInput
+                style={styles.commentInput}
+                value={editText}
+                onChangeText={setEditText}
+                multiline
+                autoFocus
+                placeholder="Add a comment..."
+                placeholderTextColor="#9ca3af"
+              />
+              <View style={styles.editCommentActions}>
+                <Pressable style={styles.cancelBtn} onPress={() => setEditingComment(false)}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.saveBtn} onPress={handleSaveComment} disabled={savingComment}>
+                  {savingComment
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <Text style={styles.saveBtnText}>Save</Text>
+                  }
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable style={styles.commentRow} onPress={handleEditComment}>
+              <Text style={[styles.descriptionText, !moment.comment && styles.commentPlaceholder]}>
+                {moment.comment || 'Add a comment...'}
+              </Text>
+              <MaterialIcons name="edit" size={16} color="#9ca3af" style={styles.editIcon} />
+            </Pressable>
+          )}
+        </View>
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 16 }]}>
@@ -256,10 +307,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
   },
+  commentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
   descriptionText: {
+    flex: 1,
     fontSize: 16,
     lineHeight: 24,
     color: '#4b5563',
+  },
+  commentPlaceholder: {
+    color: '#9ca3af',
+  },
+  editIcon: {
+    marginTop: 4,
+  },
+  editCommentBox: {
+    gap: 12,
+  },
+  commentInput: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  editCommentActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  saveBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#1f2937',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  saveBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
   bottomBar: {
     borderTopWidth: 1,

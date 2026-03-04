@@ -25,7 +25,7 @@ export interface SignUpRequest {
 }
 
 export interface SignInRequest {
-  email: string;
+  user_name: string;
   password: string;
 }
 
@@ -64,7 +64,7 @@ export async function clearTokens(): Promise<void> {
 
 /** Authenticate user with email and password */
 export async function signIn(request: SignInRequest): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/signin`, {
+  const response = await fetch(`${API_BASE_URL}/auth/signin`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -74,7 +74,13 @@ export async function signIn(request: SignInRequest): Promise<AuthResponse> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || 'Failed to sign in');
+    const detail = error.detail;
+    const message = typeof detail === 'string'
+      ? detail
+      : Array.isArray(detail)
+        ? detail[0]?.msg || 'Failed to sign in'
+        : 'Failed to sign in';
+    throw new Error(message);
   }
 
   const tokens = await response.json();
@@ -84,7 +90,7 @@ export async function signIn(request: SignInRequest): Promise<AuthResponse> {
 
 /** Register a new user account */
 export async function signUp(request: SignUpRequest): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/sign_up`, {
+  const response = await fetch(`${API_BASE_URL}/auth/sign_up`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -114,6 +120,34 @@ export interface User {
   created_at: number;
 }
 
+export interface UserUpdateRequest {
+  user_name?: string;
+  current_password?: string;
+  new_password?: string;
+}
+
+export interface Album {
+  year: number;
+  month: number;
+  cover_image: string;
+  count: number;
+}
+
+export interface TreeStatus {
+  stage: number | 'dead';
+  count: number;
+}
+
+/** Fetch user's tree stage based on moment count */
+export async function getTreeStatus(): Promise<TreeStatus> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/me/tree`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch tree status');
+  return response.json();
+}
+
 /** Fetch current user's profile information */
 export async function getCurrentUser(): Promise<User> {
   const token = await getAccessToken();
@@ -125,6 +159,62 @@ export async function getCurrentUser(): Promise<User> {
 
   if (!response.ok) {
     throw new Error('Failed to fetch user');
+  }
+  return response.json();
+}
+
+export interface CalendarDay {
+  date: string;
+  moment_id: number;
+}
+
+/** Fetch days in a month that have moments */
+export async function getCalendar(year: number, month: number): Promise<CalendarDay[]> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/album/calendar/${year}/${month}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch calendar');
+  return response.json();
+}
+
+/** Fetch moments for a specific year/month */
+export async function getAlbumMoments(year: number, month: number): Promise<Moment[]> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/album/${year}/${month}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch album moments');
+  return response.json();
+}
+
+/** Fetch user's moments grouped by month */
+export async function getAlbums(): Promise<Album[]> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/album/`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch albums');
+  }
+  return response.json();
+}
+
+/** Update current user's profile (username and/or password) */
+export async function updateUser(request: UserUpdateRequest): Promise<User> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/me/update`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to update user');
   }
   return response.json();
 }
@@ -197,6 +287,9 @@ export async function createMoment(imageUri: string, comment?: string): Promise<
   }
   return response.json();
 }
+
+
+
 
 /** Toggle the starred status of a moment */
 export async function toggleStar(momentId: number): Promise<Moment> {

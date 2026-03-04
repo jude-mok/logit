@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from app.database import get_db
 from app.models.moment import Moment
-from app.schemas.moment import MomentResponse
+from app.schemas.moment import MomentResponse, EditRequest
 from app.services.storage import save_image
 
 router = APIRouter(prefix="/moments", tags=["moments"])
@@ -37,11 +37,9 @@ async def create_moment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 오늘 자정(UTC) 타임스탬프 계산
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     today_timestamp = int(today.timestamp())
 
-    # 오늘 이미 포스팅했는지 확인
     existing_today = db.query(Moment).filter(
         Moment.user_id == current_user.id,
         Moment.created_at >= today_timestamp
@@ -74,7 +72,7 @@ def get_moments(
         query = query.filter(Moment.is_starred == True).order_by(Moment.created_at.desc())
     elif order == "chronological":
         query = query.order_by(Moment.created_at.desc())
-    else:  # random
+    else:
         query = query.order_by(func.random()).limit(10)
 
     return query.all()
@@ -112,3 +110,19 @@ def delete_moment(
     db.delete(moment)
     db.commit()
     return {"message": "deleted"}
+
+
+@router.patch("/{moment_id}/edit", response_model=MomentResponse)
+def edit_moment(
+    moment_id: int,
+    request: EditRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    moment = db.query(Moment).filter(Moment.id == moment_id, Moment.user_id == current_user.id).first()
+    if not moment:
+        raise HTTPException(status_code=404, detail="Moment not found")
+    moment.comment = request.new_comment
+    db.commit()
+    db.refresh(moment)
+    return moment

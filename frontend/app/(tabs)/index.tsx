@@ -163,7 +163,7 @@ export default function ArchiveScreen() {
       ) : (
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -177,36 +177,35 @@ export default function ArchiveScreen() {
               </Text>
             </View>
           ) : (
-            <>
-              <View style={styles.masonryGrid}>
-                <View style={styles.column}>
-                  {leftColumnMoments.map((moment) => (
-                    <MomentCard
-                      key={moment.id}
-                      moment={moment}
-                      onPress={() => handleMomentPress(moment)}
-                    />
-                  ))}
-                </View>
-                <View style={styles.column}>
-                  {rightColumnMoments.map((moment) => (
-                    <MomentCard
-                      key={moment.id}
-                      moment={moment}
-                      onPress={() => handleMomentPress(moment)}
-                    />
-                  ))}
-                </View>
+            <View style={styles.masonryGrid}>
+              <View style={styles.column}>
+                {leftColumnMoments.map((moment) => (
+                  <MomentCard
+                    key={moment.id}
+                    moment={moment}
+                    onPress={() => handleMomentPress(moment)}
+                  />
+                ))}
               </View>
-              {quote && (
-                <View style={styles.quoteContainer}>
-                  <Text style={styles.quoteText}>"{quote.text}"</Text>
-                  {quote.author && (
-                    <Text style={styles.quoteAuthor}>— {quote.author}</Text>
-                  )}
-                </View>
+              <View style={styles.column}>
+                {rightColumnMoments.map((moment) => (
+                  <MomentCard
+                    key={moment.id}
+                    moment={moment}
+                    onPress={() => handleMomentPress(moment)}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {quote && (
+            <View style={styles.quoteCard}>
+              <Text style={styles.quoteText}>"{quote.text}"</Text>
+              {quote.author && (
+                <Text style={styles.quoteAuthor}>— {quote.author}</Text>
               )}
-            </>
+            </View>
           )}
         </ScrollView>
       )}
@@ -263,7 +262,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 6,
-    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -294,11 +292,14 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
   },
-  quoteContainer: {
+  quoteCard: {
     marginTop: 32,
     paddingHorizontal: 24,
     paddingVertical: 24,
     alignItems: 'center',
+  },
+  quoteMark: {
+    display: 'none',
   },
   quoteText: {
     fontSize: 16,

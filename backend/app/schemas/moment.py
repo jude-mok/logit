@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class MonentComment(BaseModel):
-    comment : Optional[BaseModel] = None
 
+class EditRequest(BaseModel):
+    new_comment : str
+    
 class MomentResponse(BaseModel):
     id: int
     image_path: str
