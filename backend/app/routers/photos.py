@@ -14,6 +14,22 @@ from app.services.storage import save_image
 
 router = APIRouter(prefix="/moments", tags=["moments"])
 
+@router.get("/can-upload")
+def can_upload_today(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Check if user can upload a moment today (one per day limit)"""
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_timestamp = int(today.timestamp())
+
+    existing_today = db.query(Moment).filter(
+        Moment.user_id == current_user.id,
+        Moment.created_at >= today_timestamp
+    ).first()
+
+    return {"can_upload": existing_today is None}
+
 @router.post("/", response_model=MomentResponse)
 async def create_moment(
     file: UploadFile = File(...),

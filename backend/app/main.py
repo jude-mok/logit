@@ -8,7 +8,7 @@ from app.routers import photos, auth, user, quote
 
 
 app = FastAPI(
-    title="Ostar API",
+    title="Logit API",
     description="Photo diary API - one photo per day with a comment",
     version="1.0.0",
 )
