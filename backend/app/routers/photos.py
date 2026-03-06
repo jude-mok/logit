@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func
-from typing import List
+from typing import List, Optional
 from app.services.dependencies import get_current_user
 from app.models.user import User
 import time
@@ -77,7 +77,7 @@ def get_moments(
 
     return query.all()
 
-@router.get("/random", response_model=MomentResponse)
+@router.get("/random", response_model=Optional[MomentResponse])
 def get_random_moment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

@@ -5,10 +5,8 @@ from app.models.user import User
 from app.database import get_db
 from app.services.auth import verify_password, create_access_token, create_refresh_token, hash_password
 import time
+import httpx
 from app.schemas.user import GoogleLoginRequest
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from app.config import settings
 
 
 router = APIRouter(prefix= "/auth", tags=["auth"])
@@ -58,21 +56,22 @@ async def sign_up(request: UserCreate, db: Session = Depends(get_db)):
 @router.post("/google", response_model=LoginResponse)
 async def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
     """
-    Authenticate or register user via Google OAuth.
-    Creates a new account if the Google user doesn't exist.
+    Authenticate or register user via Google OAuth access token.
+    Verifies the token with Google's userinfo endpoint.
     """
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            request.id_token,
-            google_requests.Request(),
-            settings.google_client_id
+    async with httpx.AsyncClient() as client:
+        res = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {request.access_token}"}
         )
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid Google token")
 
+    if res.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google access token")
+
+    idinfo = res.json()
     google_id = idinfo["sub"]
     email = idinfo["email"]
-    name = idinfo.get("name", "")
+    name = idinfo.get("name", email.split("@")[0])
 
     user = db.query(User).filter(
         User.provider == "google",
@@ -89,7 +88,8 @@ async def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db
             password_hash=None,
             provider="google",
             provider_id=google_id,
-            user_name=name
+            user_name=name,
+            created_at=int(time.time())
         )
         db.add(user)
         db.commit()

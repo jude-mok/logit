@@ -28,7 +28,4 @@ class LoginRequest(BaseModel):
     password : str
 
 class GoogleLoginRequest(BaseModel):
-    id_token: str
-    
-    class Config:
-        from_attributes = True
+    access_token: str

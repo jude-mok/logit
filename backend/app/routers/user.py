@@ -58,20 +58,20 @@ async def get_tree_status(current_user: User = Depends(get_current_user), db: Se
     last_moment = moments[0].created_at
     days_since = (datetime.now() - datetime.fromtimestamp(last_moment)).days
 
-    if days_since >= 7:
-        recent_dates = set()
-        for m in moments[:3]:
-            dt = datetime.fromtimestamp(m.created_at).date()
-            recent_dates.add(dt)
+    if days_since < 7:
+        return {"stage": 6, "count": count}
+    
+    recent_dates = set()
+    for m in moments[:3]:
+        dt = datetime.fromtimestamp(m.created_at).date()
+        recent_dates.add(dt)
 
-        today = datetime.now().date()
-        consecutive = all(
-            (today - timedelta(days=i)) in recent_dates
-            for i in range(3)
-        )
+    today = datetime.now().date()
+    consecutive = all(
+        (today - timedelta(days=i)) in recent_dates
+        for i in range(3)
+    )
 
-        if consecutive:
-            return {"stage": 6, "count": count}  # 복구
-        return {"stage": "dead", "count": count}  # 시듦 유지
-
-    return {"stage": 6, "count": count}
+    if consecutive:
+        return {"stage": 6, "count": count}
+    return {"stage": "dead", "count": count}

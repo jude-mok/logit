@@ -62,6 +62,24 @@ export async function clearTokens(): Promise<void> {
 // Authentication API
 // ============================================================================
 
+/** Authenticate user via Google OAuth access token */
+export async function googleSignIn(accessToken: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to sign in with Google');
+  }
+
+  const tokens = await response.json();
+  await saveTokens(tokens);
+  return tokens;
+}
+
 /** Authenticate user with email and password */
 export async function signIn(request: SignInRequest): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/signin`, {

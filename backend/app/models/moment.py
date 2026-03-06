@@ -7,5 +7,6 @@ class Moment(Base):
     image_path = Column(String, nullable=False)
     comment = Column(String, nullable=True)
     is_starred = Column(Boolean, default=False)
+    is_backdated = Column(Boolean, default=False)
     created_at = Column(BigInteger, default=lambda: int(__import__('time').time()))
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)

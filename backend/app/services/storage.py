@@ -1,17 +1,22 @@
-import os
 import uuid
 from fastapi import UploadFile
+from supabase import create_client
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+from app.config import settings
+
+supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+BUCKET_NAME = "moments"
 
 async def save_image(file: UploadFile) -> str:
     ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
     
-    with open(filepath, "wb") as f:
-        content = await file.read()
-        f.write(content)
+    content = await file.read()
+    supabase.storage.from_(BUCKET_NAME).upload(
+        path=filename,
+        file=content,
+        file_options={"content-type": file.content_type}
+    )
     
-    return filepath
+    public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(filename)
+    return public_url

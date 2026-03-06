@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from app.models import moment, user as user_models
 from app.routers import photos, auth, user, quote, album
+from app.database import Base, engine
 
 
 app = FastAPI(
@@ -20,8 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(photos.router)
 app.include_router(auth.router)

@@ -5,7 +5,7 @@
  * Redirects to main app on successful login.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -19,8 +19,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { signIn } from '@/services/api';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { signIn, googleSignIn } from '@/services/api';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -29,6 +35,38 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_CLIENT_ID,
+    scopes: ['profile', 'email'],
+  });
+
+  useEffect(() => {
+    if (!response) return;
+
+    if (response.type === 'success') {
+      // After auto code exchange on native, authentication holds the tokens.
+      // On web/implicit flow, access_token is in params directly.
+      const accessToken =
+        response.authentication?.accessToken ?? response.params?.access_token;
+
+      if (!accessToken) {
+        Alert.alert('Error', 'No access token received from Google');
+        return;
+      }
+
+      setIsGoogleLoading(true);
+      googleSignIn(accessToken)
+        .then(() => router.replace('/(tabs)'))
+        .catch((err) =>
+          Alert.alert('Error', err instanceof Error ? err.message : 'Google sign in failed')
+        )
+        .finally(() => setIsGoogleLoading(false));
+    } else if (response.type === 'error') {
+      Alert.alert('Error', response.error?.message || 'Google sign in failed');
+    }
+  }, [response]);
 
   /** Validate credentials and authenticate user */
   const handleLogin = async () => {
@@ -46,16 +84,6 @@ export default function LoginScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  /** Navigate to registration screen */
-  const handleSignUp = () => {
-    router.push('/signup' as any);
-  };
-
-  /** Initiate Google OAuth flow (TODO: implement) */
-  const handleGoogleSignIn = () => {
-    console.log('Google sign in');
   };
 
   return (
@@ -106,7 +134,7 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
-          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          style={[styles.loginButton, isLoading && styles.buttonDisabled]}
           onPress={handleLogin}
           disabled={isLoading}
         >
@@ -123,14 +151,24 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        <Pressable style={styles.googleButton} onPress={handleGoogleSignIn}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleText}>Google</Text>
+        <Pressable
+          style={[styles.googleButton, (isGoogleLoading || !request) && styles.buttonDisabled]}
+          onPress={() => promptAsync()}
+          disabled={isGoogleLoading || !request}
+        >
+          {isGoogleLoading ? (
+            <ActivityIndicator color="#374151" />
+          ) : (
+            <>
+              <AntDesign name="google" size={20} color="#EA4335" />
+              <Text style={styles.googleText}>Continue with Google</Text>
+            </>
+          )}
         </Pressable>
 
         <View style={styles.signUpContainer}>
           <Text style={styles.signUpText}>Don't have an account? </Text>
-          <Pressable onPress={handleSignUp}>
+          <Pressable onPress={() => router.push('/signup' as any)}>
             <Text style={styles.signUpLink}>Sign Up</Text>
           </Pressable>
         </View>
@@ -195,7 +233,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 24,
   },
-  loginButtonDisabled: {
+  buttonDisabled: {
     opacity: 0.7,
   },
   loginButtonText: {
@@ -228,12 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
     borderRadius: 32,
     paddingVertical: 16,
-    gap: 8,
-  },
-  googleIcon: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#4285F4',
+    gap: 10,
   },
   googleText: {
     fontSize: 16,
