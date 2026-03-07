@@ -126,7 +126,7 @@ export default function ProfileScreen() {
     setCalLoading(true);
     try {
       const data: CalendarDay[] = await getCalendar(year, month);
-      const days = new Set(data.map(d => new Date(d.date + 'T00:00:00').getDate()));
+      const days = new Set(data.map(d => new Date(d.created_at * 1000).getDate()));
       setMarkedDays(days);
     } catch {
       setMarkedDays(new Set());

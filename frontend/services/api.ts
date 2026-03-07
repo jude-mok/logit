@@ -184,6 +184,7 @@ export async function getCurrentUser(): Promise<User> {
 export interface CalendarDay {
   date: string;
   moment_id: number;
+  created_at: number;
 }
 
 /** Fetch days in a month that have moments */

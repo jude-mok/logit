@@ -44,7 +44,7 @@ async def get_calendar(year: int, month: int, current_user: User = Depends(get_c
     ).all()
     
     return [
-        {"date": datetime.fromtimestamp(m.created_at).strftime("%Y-%m-%d"), "moment_id": m.id}
+        {"date": datetime.fromtimestamp(m.created_at).strftime("%Y-%m-%d"), "moment_id": m.id, "created_at": m.created_at}
         for m in moments
     ]
 
