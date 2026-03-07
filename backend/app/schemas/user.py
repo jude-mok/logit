@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 
 class UserCreate(BaseModel):
-    email : str
-    provider : str = "email"
-    password : Optional[str] = None
-    user_name : str
+    email: EmailStr
+    provider: str = "email"
+    password: Optional[str] = Field(None, min_length=8)
+    user_name: str = Field(min_length=2, max_length=30)
 
 class UserUpdate(BaseModel):
     user_name : Optional[str] = None

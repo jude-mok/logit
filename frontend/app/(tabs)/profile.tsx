@@ -363,7 +363,7 @@ export default function ProfileScreen() {
               {/* Weekday headers */}
               <View style={styles.weekRow}>
                 {WEEKDAYS.map((d, i) => (
-                  <Text key={i} style={[styles.weekDay, { width: cellSize }]}>{d}</Text>
+                  <Text key={i} style={styles.weekDay}>{d}</Text>
                 ))}
               </View>
 
@@ -371,34 +371,38 @@ export default function ProfileScreen() {
               {calLoading ? (
                 <ActivityIndicator style={{ marginTop: 32 }} color="#000" />
               ) : (
-                <View style={styles.calGrid}>
-                  {calCells.map((day, i) => {
-                    const isToday = day === today.getDate() && calMonth === today.getMonth() + 1 && calYear === today.getFullYear();
-                    const hasM = day !== null && markedDays.has(day);
-                    const isPast = day !== null && !isToday && (
-                      calYear < today.getFullYear() ||
-                      (calYear === today.getFullYear() && calMonth < today.getMonth() + 1) ||
-                      (calYear === today.getFullYear() && calMonth === today.getMonth() + 1 && day < today.getDate())
-                    );
-                    return (
-                      <View key={i} style={[styles.calCell, { width: cellSize, height: cellSize }]}>
-                        {day !== null && (
-                          <View style={[
-                            styles.dayBg,
-                            hasM && !isToday && styles.dayBgHasM,
-                            isToday && styles.dayBgToday,
-                          ]}>
-                            <Text style={[
-                              styles.dayNum,
-                              isPast && !hasM && styles.dayNumPast,
-                              hasM && !isToday && styles.dayNumHasM,
-                              isToday && styles.dayNumToday,
-                            ]}>{day}</Text>
+                <View>
+                  {Array.from({ length: Math.ceil(calCells.length / 7) }, (_, rowIdx) => (
+                    <View key={rowIdx} style={styles.calRow}>
+                      {calCells.slice(rowIdx * 7, rowIdx * 7 + 7).map((day, colIdx) => {
+                        const isToday = day === today.getDate() && calMonth === today.getMonth() + 1 && calYear === today.getFullYear();
+                        const hasM = day !== null && markedDays.has(day);
+                        const isPast = day !== null && !isToday && (
+                          calYear < today.getFullYear() ||
+                          (calYear === today.getFullYear() && calMonth < today.getMonth() + 1) ||
+                          (calYear === today.getFullYear() && calMonth === today.getMonth() + 1 && day < today.getDate())
+                        );
+                        return (
+                          <View key={colIdx} style={[styles.calCell, { height: cellSize }]}>
+                            {day !== null && (
+                              <View style={[
+                                styles.dayBg,
+                                isToday && !hasM && styles.dayBgToday,
+                                hasM && styles.dayBgHasM,
+                              ]}>
+                                <Text style={[
+                                  styles.dayNum,
+                                  isPast && !hasM && styles.dayNumPast,
+                                  isToday && !hasM && styles.dayNumToday,
+                                  hasM && styles.dayNumHasM,
+                                ]}>{day}</Text>
+                              </View>
+                            )}
                           </View>
-                        )}
-                      </View>
-                    );
-                  })}
+                        );
+                      })}
+                    </View>
+                  ))}
                 </View>
               )}
             </View>
@@ -549,9 +553,10 @@ const styles = StyleSheet.create({
   navBtn: { padding: 4 },
   monthTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937', letterSpacing: 0.3 },
   weekRow: { flexDirection: 'row', marginBottom: 4 },
-  weekDay: { textAlign: 'center', fontSize: 12, fontWeight: '600', color: '#9ca3af' },
-  calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  calCell: { alignItems: 'center', justifyContent: 'center' },
+  weekDay: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600', color: '#9ca3af' },
+  calGrid: {},
+  calRow: { flexDirection: 'row' },
+  calCell: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   dayBg: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   dayBgHasM: { backgroundColor: '#1f2937' },
   dayBgToday: { backgroundColor: 'transparent', borderWidth: 2, borderColor: '#1f2937' },

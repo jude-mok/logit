@@ -310,6 +310,21 @@ export async function createMoment(imageUri: string, comment?: string): Promise<
 
 
 
+/** Edit the comment on a moment */
+export async function editComment(momentId: number, newComment: string): Promise<Moment> {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_BASE_URL}/moments/${momentId}/edit`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ new_comment: newComment }),
+  });
+  if (!response.ok) throw new Error('Failed to update comment');
+  return response.json();
+}
+
 /** Toggle the starred status of a moment */
 export async function toggleStar(momentId: number): Promise<Moment> {
   const token = await getAccessToken();

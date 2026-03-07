@@ -22,6 +22,10 @@ async def update_me(request : UserUpdate, current_user : User = Depends(get_curr
             raise HTTPException(status_code = 409, detail = "user name is already exists")
         current_user.user_name = request.user_name
     if request.new_password:
+        if not current_user.password_hash:
+            raise HTTPException(status_code=400, detail="Cannot set password for OAuth accounts")
+        if not request.current_password:
+            raise HTTPException(status_code=400, detail="Current password is required")
         if not verify_password(request.current_password, current_user.password_hash):
             raise HTTPException(status_code=401, detail="Wrong current password")
         current_user.password_hash = hash_password(request.new_password)

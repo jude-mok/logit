@@ -14,11 +14,8 @@ router = APIRouter(prefix= "/auth", tags=["auth"])
 @router.post("/signin", response_model=LoginResponse)
 async def sign_in(request: LoginRequest, db: Session = Depends(get_db)):
     db_exist = db.query(User).filter(User.user_name == request.user_name).first()
-    if not db_exist:
-        raise HTTPException(status_code = 404, detail = "Wrong email or password.")
-    
-    if not verify_password(request.password, db_exist.password_hash):
-        raise HTTPException(status_code = 404, detail = "Wrong email or password.")
+    if not db_exist or not db_exist.password_hash or not verify_password(request.password, db_exist.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return {
     "access_token": create_access_token(db_exist.id),
