@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func
 from typing import List, Optional
 from app.services.dependencies import get_current_user
 from app.models.user import User
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.database import get_db
 from app.models.moment import Moment
@@ -14,18 +15,35 @@ from app.services.storage import save_image
 
 router = APIRouter(prefix="/moments", tags=["moments"])
 
+
+def get_daily_reset_timestamp(timezone_str: str) -> int:
+    """Get the most recent 8 AM in the user's timezone as a UTC Unix timestamp."""
+    try:
+        tz = ZoneInfo(timezone_str)
+    except (ZoneInfoNotFoundError, Exception):
+        tz = ZoneInfo("UTC")
+
+    now_local = datetime.now(tz)
+    reset_local = now_local.replace(hour=8, minute=0, second=0, microsecond=0)
+
+    if now_local < reset_local:
+        reset_local -= timedelta(days=1)
+
+    return int(reset_local.timestamp())
+
+
 @router.get("/can-upload")
 def can_upload_today(
+    timezone: str = Query(default="UTC"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Check if user can upload a moment today (one per day limit)"""
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_timestamp = int(today.timestamp())
+    """Check if user can upload a moment today (resets at 8 AM local time)"""
+    reset_timestamp = get_daily_reset_timestamp(timezone)
 
     existing_today = db.query(Moment).filter(
         Moment.user_id == current_user.id,
-        Moment.created_at >= today_timestamp
+        Moment.created_at >= reset_timestamp
     ).first()
 
     return {"can_upload": existing_today is None}
@@ -34,15 +52,15 @@ def can_upload_today(
 async def create_moment(
     file: UploadFile = File(...),
     comment: str = Form(None),
+    timezone: str = Query(default="UTC"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_timestamp = int(today.timestamp())
+    reset_timestamp = get_daily_reset_timestamp(timezone)
 
     existing_today = db.query(Moment).filter(
         Moment.user_id == current_user.id,
-        Moment.created_at >= today_timestamp
+        Moment.created_at >= reset_timestamp
     ).first()
 
     if existing_today:

@@ -293,13 +293,17 @@ export async function createMoment(imageUri: string, comment?: string): Promise<
     formData.append('comment', comment);
   }
 
-  const response = await fetch(`${API_BASE_URL}/moments/`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-    body: formData,
-  });
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(
+    `${API_BASE_URL}/moments/?timezone=${encodeURIComponent(timezone)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to create moment');
@@ -356,14 +360,18 @@ export async function deleteMoment(momentId: number): Promise<void> {
   }
 }
 
-/** Check if user can upload a moment today (one per day limit) */
+/** Check if user can upload a moment today (resets at 8 AM local time) */
 export async function canUploadToday(): Promise<boolean> {
   const token = await getAccessToken();
-  const response = await fetch(`${API_BASE_URL}/moments/can-upload`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(
+    `${API_BASE_URL}/moments/can-upload?timezone=${encodeURIComponent(timezone)}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     return false;
