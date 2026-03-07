@@ -1,10 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
 from app.models import moment, user as user_models
 from app.routers import photos, auth, user, quote, album
-from app.database import Base, engine
 
 
 app = FastAPI(
