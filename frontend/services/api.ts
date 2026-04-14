@@ -6,7 +6,8 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
-
+import NetInfo from '@react-native-community/netinfo';
+import { saveMoments, getLocalMoments } from './database';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
 // ============================================================================
@@ -257,16 +258,26 @@ export type OrderType = 'chronological' | 'random' | 'starred';
  * @param order - Sort order: 'random', 'chronological', or 'starred'
  */
 export async function getMoments(order: OrderType = 'chronological'): Promise<Moment[]> {
-  const token = await getAccessToken();
-  const response = await fetch(`${API_BASE_URL}/moments/?order=${order}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch moments');
+  const netInfo = await NetInfo.fetch();
+  
+  if (netInfo.isConnected) {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/moments/?order=${order}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      console.error('API Error:', response.status, errorBody);
+      throw new Error('Failed to fetch moments');
+    }
+    const moments = await response.json();
+    saveMoments(moments);
+    return moments;
+  } else {
+    return getLocalMoments();
   }
-  return response.json();
 }
 
 /**
