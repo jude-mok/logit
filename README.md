@@ -84,9 +84,7 @@ logit/
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
 
 Create a `.env` file (see `.env.example`):
@@ -102,8 +100,8 @@ SUPABASE_SERVICE_KEY=your-supabase-service-key
 Run migrations and start:
 
 ```bash
-alembic upgrade head
-uvicorn app.main:app --reload
+uv run alembic upgrade head
+uv run uvicorn app.main:app --reload
 ```
 
 ### Frontend
