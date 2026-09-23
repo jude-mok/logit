@@ -61,7 +61,7 @@ describe("authenticated API requests", () => {
     const body = new FormData();
     body.append("comment", "hello");
     await request("/moments/", { method: "POST", body });
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/moments');
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/moments");
     const options = fetchMock.mock.calls[0][1];
     expect(options.headers.get("Authorization")).toBe("Bearer test-token");
     expect(options.headers.has("Content-Type")).toBe(false);
@@ -99,4 +99,13 @@ describe("authenticated API requests", () => {
     expect(session.get()).toBe(null);
     expect(window.dispatchEvent).toHaveBeenCalledOnce();
   });
+});
+
+import { shuffleIds } from "./api";
+it("shuffles without dropping, duplicating or mutating moments", () => {
+  const ids = [1, 2, 3, 4];
+  const result = shuffleIds(ids, () => 0);
+  expect(result).toEqual([2, 3, 4, 1]);
+  expect(ids).toEqual([1, 2, 3, 4]);
+  expect(shuffleIds([])).toEqual([]);
 });

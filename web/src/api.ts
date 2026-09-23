@@ -27,11 +27,14 @@ export async function request<T>(
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init.body && !(init.body instanceof FormData))
     headers.set("Content-Type", "application/json");
-  const response = await fetch(`${base.replace(/\/$/, "")}${path.replace(/\/(?=\?|$)/, "")}`, {
-    ...init,
-    headers,
-    signal: AbortSignal.timeout(30000),
-  });
+  const response = await fetch(
+    `${base.replace(/\/$/, "")}${path.replace(/\/(?=\?|$)/, "")}`,
+    {
+      ...init,
+      headers,
+      signal: AbortSignal.timeout(30000),
+    },
+  );
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     if (response.status === 401 && token && session.get() === token) {
@@ -70,4 +73,13 @@ export function filterMoments(
         (m.comment || "").toLowerCase().includes(query.toLowerCase()),
     )
     .sort((a, b) => b.created_at - a.created_at);
+}
+
+export function shuffleIds(ids: number[], random = Math.random): number[] {
+  const result = [...ids];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }

@@ -14,12 +14,14 @@ import {
   Leaf,
   Check,
   Trash2,
+  Shuffle,
 } from "lucide-react";
 import {
   request,
   session,
   imageUrl,
   filterMoments,
+  shuffleIds,
   monthKey,
   type Moment,
   type User,
@@ -106,10 +108,21 @@ export default function App() {
     const id = setTimeout(() => setNotice(""), 3500);
     return () => clearTimeout(id);
   }, [notice]);
-  const visible = useMemo(
-    () => filterMoments(moments, query, view === "favorites", month),
-    [moments, query, view, month],
+  const [order, setOrder] = useState<"random" | "newest">("random");
+  const [shuffleVersion, setShuffleVersion] = useState(0);
+  const momentIds = moments.map((m) => m.id).join(",");
+  const randomIds = useMemo(
+    () => shuffleIds(momentIds ? momentIds.split(",").map(Number) : []),
+    [momentIds, shuffleVersion],
   );
+  const visible = useMemo(() => {
+    const filtered = filterMoments(moments, query, view === "favorites", month);
+    if (order !== "random" || view !== "moments" || month) return filtered;
+    const ranks = new Map(randomIds.map((id, index) => [id, index]));
+    return filtered.sort(
+      (a, b) => (ranks.get(a.id) ?? 0) - (ranks.get(b.id) ?? 0),
+    );
+  }, [moments, query, view, month, order, randomIds]);
   const months = useMemo(
     () =>
       [...new Set(moments.map((m) => monthKey(m.created_at)))].sort().reverse(),
@@ -361,6 +374,33 @@ export default function App() {
             )}
           </div>
           <div className="filters">
+            {view === "moments" && !month && (
+              <>
+                <label className="month-select">
+                  <select
+                    aria-label="Moment order"
+                    value={order}
+                    onChange={(e) =>
+                      setOrder(e.target.value as "random" | "newest")
+                    }
+                  >
+                    <option value="random">Random</option>
+                    <option value="newest">Newest first</option>
+                  </select>
+                  <ChevronDown size={14} />
+                </label>
+                {order === "random" && (
+                  <button
+                    className="shuffle-button"
+                    aria-label="Shuffle moments"
+                    title="Shuffle moments"
+                    onClick={() => setShuffleVersion((v) => v + 1)}
+                  >
+                    <Shuffle size={16} />
+                  </button>
+                )}
+              </>
+            )}
             <label className="search">
               <Search size={16} />
               <input
