@@ -3,15 +3,18 @@
 import io
 import time
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock, patch
 
 from tests.conftest import make_moment
 
 
 def _today_start_ts() -> int:
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    return int(today.timestamp())
+    now = datetime.now(timezone.utc)
+    reset = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    if now < reset:
+        reset -= timedelta(days=1)
+    return int(reset.timestamp())
 
 
 # ---------------------------------------------------------------------------

@@ -121,3 +121,7 @@ Create a public bucket named `moments` in your Supabase project under **Storage*
 ## Deployment
 
 Backend is deployed on [Railway](https://railway.app). Set all environment variables listed above in the Railway project settings.
+
+## Web journal
+
+The React/TypeScript web client lives in `web/`. Run `npm ci --prefix web` and `npm run dev --prefix web`, then open http://127.0.0.1:5174. See [web setup](web/README.md) for API configuration and deployment. The original Expo app remains in `frontend/`.

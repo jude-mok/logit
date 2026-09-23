@@ -62,19 +62,19 @@ class TestSignIn:
         assert "access_token" in body
         assert "refresh_token" in body
 
-    def test_signin_wrong_username_returns_404(self, client, test_user):
+    def test_signin_wrong_username_returns_401(self, client, test_user):
         res = client.post("/auth/signin", json={
             "user_name": "doesnotexist",
             "password": "password123",
         })
-        assert res.status_code == 404
+        assert res.status_code == 401
 
-    def test_signin_wrong_password_returns_404(self, client, test_user):
+    def test_signin_wrong_password_returns_401(self, client, test_user):
         res = client.post("/auth/signin", json={
             "user_name": "testuser",
             "password": "wrongpassword",
         })
-        assert res.status_code == 404
+        assert res.status_code == 401
 
 
 # ---------------------------------------------------------------------------
