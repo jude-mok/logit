@@ -27,6 +27,12 @@ import {
 import { demoMoments } from "./demo";
 import "./style.css";
 export default function App() {
+  const [columnCount, setColumnCount] = useState(journalColumns);
+  useEffect(() => {
+    const resize = () => setColumnCount(journalColumns());
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
   const [mode, setMode] = useState<"demo" | "live">(() =>
     session.get() ? "live" : "demo",
   );
@@ -450,51 +456,62 @@ export default function App() {
               })}
           </div>
         ) : (
-          <div className="masonry">
-            {visible.map((m, i) => (
-              <article className="moment" key={m.id}>
-                <div className={`photo photo-${i % 5}`}>
-                  <button
-                    className="photo-open"
-                    aria-label={`Open ${m.comment || "moment"}`}
-                    onClick={() => {
-                      setSelected(m);
-                      setCaption(m.comment || "");
-                      setError("");
-                      setDeleteConfirm(false);
-                      setModal("detail");
-                    }}
-                  >
-                    <img
-                      src={imageUrl(m.image_path)}
-                      alt={m.comment || "A saved moment"}
-                      loading={i < 4 ? "eager" : "lazy"}
-                    />
-                  </button>
-                  <button
-                    className={`heart ${m.is_starred ? "hearted" : ""}`}
-                    disabled={busy}
-                    aria-label={
-                      m.is_starred
-                        ? "Remove from favorites"
-                        : "Add to favorites"
-                    }
-                    onClick={() => void star(m)}
-                  >
-                    <Heart
-                      size={17}
-                      fill={m.is_starred ? "currentColor" : "none"}
-                    />
-                  </button>
-                  <span className="photo-hint">
-                    A closer look <ArrowUpRight size={14} />
-                  </span>
-                </div>
-                <div className="moment-caption">
-                  <p>{m.comment || "A moment worth keeping."}</p>
-                  <time>{dateLabel(m.created_at)}</time>
-                </div>
-              </article>
+          <div
+            className="masonry"
+            style={{
+              gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+            }}
+          >
+            {Array.from({ length: columnCount }, (_, column) => (
+              <div className="masonry-column" key={column}>
+                {visible
+                  .filter((_, index) => index % columnCount === column)
+                  .map((m, i) => (
+                    <article className="moment" key={m.id}>
+                      <div className={`photo photo-${m.id % 5}`}>
+                        <button
+                          className="photo-open"
+                          aria-label={`Open ${m.comment || "moment"}`}
+                          onClick={() => {
+                            setSelected(m);
+                            setCaption(m.comment || "");
+                            setError("");
+                            setDeleteConfirm(false);
+                            setModal("detail");
+                          }}
+                        >
+                          <img
+                            src={imageUrl(m.image_path)}
+                            alt={m.comment || "A saved moment"}
+                            loading={i < 4 ? "eager" : "lazy"}
+                          />
+                        </button>
+                        <button
+                          className={`heart ${m.is_starred ? "hearted" : ""}`}
+                          disabled={busy}
+                          aria-label={
+                            m.is_starred
+                              ? "Remove from favorites"
+                              : "Add to favorites"
+                          }
+                          onClick={() => void star(m)}
+                        >
+                          <Heart
+                            size={17}
+                            fill={m.is_starred ? "currentColor" : "none"}
+                          />
+                        </button>
+                        <span className="photo-hint">
+                          A closer look <ArrowUpRight size={14} />
+                        </span>
+                      </div>
+                      <div className="moment-caption">
+                        <p>{m.comment || "A moment worth keeping."}</p>
+                        <time>{dateLabel(m.created_at)}</time>
+                      </div>
+                    </article>
+                  ))}
+              </div>
             ))}
           </div>
         )}
@@ -768,4 +785,10 @@ function dateLabel(time: number) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function journalColumns() {
+  if (window.innerWidth <= 700) return 2;
+  if (window.innerWidth <= 1050) return 3;
+  return 4;
 }
