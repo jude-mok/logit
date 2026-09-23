@@ -49,7 +49,7 @@ export async function request<T>(
   return data as T;
 }
 export const imageUrl = (path: string) =>
-  /^(https?:|data:|blob:)/.test(path)
+  /^(https?:|data:|blob:|\/demo\/)/.test(path)
     ? path
     : `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 export function monthKey(timestamp: number) {
