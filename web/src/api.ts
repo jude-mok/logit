@@ -27,7 +27,7 @@ export async function request<T>(
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init.body && !(init.body instanceof FormData))
     headers.set("Content-Type", "application/json");
-  const response = await fetch(`${base.replace(/\/$/, "")}${path}`, {
+  const response = await fetch(`${base.replace(/\/$/, "")}${path.replace(/\/(?=\?|$)/, "")}`, {
     ...init,
     headers,
     signal: AbortSignal.timeout(30000),

@@ -11,6 +11,7 @@ import calendar
 
 router = APIRouter(prefix="/album", tags=["albums"])
 
+@router.get("")
 @router.get("/")
 async def get_albums(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     moments =  db.query(Moment.created_at, Moment.image_path).filter(Moment.user_id == current_user.id).all()

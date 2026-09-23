@@ -10,6 +10,7 @@ from app.models.moment import Moment
 
 router = APIRouter(prefix="/me", tags=["me"]) 
 
+@router.get("", response_model=UserResponse)
 @router.get("/", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user

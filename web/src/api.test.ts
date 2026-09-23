@@ -61,6 +61,7 @@ describe("authenticated API requests", () => {
     const body = new FormData();
     body.append("comment", "hello");
     await request("/moments/", { method: "POST", body });
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/moments');
     const options = fetchMock.mock.calls[0][1];
     expect(options.headers.get("Authorization")).toBe("Bearer test-token");
     expect(options.headers.has("Content-Type")).toBe(false);

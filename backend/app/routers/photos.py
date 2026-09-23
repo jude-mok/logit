@@ -48,6 +48,7 @@ def can_upload_today(
 
     return {"can_upload": existing_today is None}
 
+@router.post("", response_model=MomentResponse)
 @router.post("/", response_model=MomentResponse)
 async def create_moment(
     file: UploadFile = File(...),
@@ -78,6 +79,7 @@ async def create_moment(
     db.refresh(moment)
     return moment
 
+@router.get("", response_model=List[MomentResponse])
 @router.get("/", response_model=List[MomentResponse])
 def get_moments(
     order: str = "random",
