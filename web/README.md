@@ -11,7 +11,7 @@ npm test
 npm run build
 ```
 
-Open http://127.0.0.1:5174. The sample journal runs without a server, uses owner-provided photos stored in `public/demo/` (optimized WebP copies with metadata removed; dates and captions are illustrative), and keeps changes in memory until reload. Sample content never writes to the real account. Sign in or create an account to use the API. Local `/api` requests are proxied to the deployed Railway API. Set `API_PROXY_TARGET=http://127.0.0.1:8000` in `.env.local` to use a local backend. Signing in or creating an account against Railway uses real data.
+Open http://127.0.0.1:5174. The sample journal runs without a server, uses owner-provided photos stored in `public/demo/` (optimized WebP copies with metadata removed; dates and captions are illustrative), and is read-only. Sample content cannot be added, edited, deleted, or starred. Search, albums, favorites filtering, and details remain available. Sign in or create an account to use the API. Local `/api` requests are proxied to the deployed Railway API. Set `API_PROXY_TARGET=http://127.0.0.1:8000` in `.env.local` to use a local backend. Signing in or creating an account against Railway uses real data.
 
 ## Features
 

@@ -122,6 +122,12 @@ export default function App() {
     setDeleteConfirm(false);
   };
   const openNew = () => {
+    if (mode === "demo") {
+      setSignup(true);
+      setError("");
+      setModal("auth");
+      return;
+    }
     setFile(null);
     setCaption("");
     setError("");
@@ -132,13 +138,12 @@ export default function App() {
     setSelected(m);
   }
   async function star(m: Moment) {
+    if (mode === "demo") return;
     if (busy) return;
     setBusy(true);
     try {
       replace(
-        mode === "demo"
-          ? { ...m, is_starred: !m.is_starred }
-          : await request<Moment>(`/moments/${m.id}/star`, { method: "PATCH" }),
+        await request<Moment>(`/moments/${m.id}/star`, { method: "PATCH" }),
       );
     } catch (e) {
       setError(message(e));
@@ -147,55 +152,33 @@ export default function App() {
     }
   }
   async function save() {
+    if (mode === "demo") return;
     setBusy(true);
     setError("");
     try {
       if (modal === "new") {
         if (!file) throw new Error("Choose a photo first.");
-        let m: Moment;
-        if (mode === "demo") {
-          const data = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          m = {
-            id: Date.now(),
-            image_path: data,
-            comment: caption,
-            is_starred: false,
-            created_at: Date.now() / 1000,
-          };
-        } else {
-          const body = new FormData();
-          body.append("file", file);
-          body.append("comment", caption);
-          m = await request<Moment>(
-            `/moments/?timezone=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`,
-            { method: "POST", body },
-          );
-        }
+        const body = new FormData();
+        body.append("file", file);
+        body.append("comment", caption);
+        const m = await request<Moment>(
+          `/moments/?timezone=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`,
+          { method: "POST", body },
+        );
         setMoments((old) => [m, ...old]);
         setView("moments");
         setMonth("");
         setQuery("");
       } else if (selected) {
         replace(
-          mode === "demo"
-            ? { ...selected, comment: caption }
-            : await request<Moment>(`/moments/${selected.id}/edit`, {
-                method: "PATCH",
-                body: JSON.stringify({ new_comment: caption }),
-              }),
+          await request<Moment>(`/moments/${selected.id}/edit`, {
+            method: "PATCH",
+            body: JSON.stringify({ new_comment: caption }),
+          }),
         );
       }
       setModal(null);
-      setNotice(
-        mode === "demo"
-          ? "Saved in this demo. Refreshing resets your changes."
-          : "Your moment is saved.",
-      );
+      setNotice("Your moment is saved.");
     } catch (e) {
       setError(message(e));
     } finally {
@@ -203,6 +186,7 @@ export default function App() {
     }
   }
   async function remove() {
+    if (mode === "demo") return;
     if (!selected) return;
     setBusy(true);
     try {
@@ -320,14 +304,15 @@ export default function App() {
             </p>
           </div>
           <button className="primary" onClick={openNew}>
-            <Plus size={18} /> Add a moment
+            <Plus size={18} />{" "}
+            {mode === "demo" ? "Start your journal" : "Add a moment"}
           </button>
         </div>
         {mode === "demo" && (
           <div className="demo-banner">
             <span>
-              <Leaf size={15} /> You’re wandering through a sample journal. Make
-              yourself at home.
+              <Leaf size={15} /> Explore this read-only sample journal. Sign in
+              to keep your own moments.
             </span>
             <button
               onClick={() => {
@@ -488,7 +473,7 @@ export default function App() {
                         </button>
                         <button
                           className={`heart ${m.is_starred ? "hearted" : ""}`}
-                          disabled={busy}
+                          disabled={busy || mode === "demo"}
                           aria-label={
                             m.is_starred
                               ? "Remove from favorites"
@@ -552,7 +537,7 @@ export default function App() {
           <span>A small collection of a life well noticed.</span>
           <span>
             {mode === "demo"
-              ? "Sample journal · Changes reset on refresh"
+              ? "Sample journal · View only"
               : "Your moments, at your own pace."}
           </span>
         </footer>
@@ -719,30 +704,33 @@ export default function App() {
                   placeholder="What made this moment yours?"
                   value={caption}
                   maxLength={2000}
+                  readOnly={mode === "demo"}
                   disabled={busy}
                   onChange={(e) => setCaption(e.target.value)}
                 />
               </label>
-              <div className="dialog-actions">
-                {modal === "detail" && (
+              {mode === "live" && (
+                <div className="dialog-actions">
+                  {modal === "detail" && (
+                    <button
+                      className="delete"
+                      disabled={busy}
+                      onClick={() => setDeleteConfirm(true)}
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  )}
                   <button
-                    className="delete"
-                    disabled={busy}
-                    onClick={() => setDeleteConfirm(true)}
+                    className="primary"
+                    onClick={() => void save()}
+                    disabled={busy || (modal === "new" && !file)}
                   >
-                    <Trash2 size={16} /> Delete
+                    {busy ? "Saving…" : "Save moment"}
+                    <ArrowUpRight size={16} />
                   </button>
-                )}
-                <button
-                  className="primary"
-                  onClick={() => void save()}
-                  disabled={busy || (modal === "new" && !file)}
-                >
-                  {busy ? "Saving…" : "Save moment"}
-                  <ArrowUpRight size={16} />
-                </button>
-              </div>
-              {deleteConfirm && (
+                </div>
+              )}
+              {mode === "live" && deleteConfirm && (
                 <div className="confirm">
                   <p>Delete this moment permanently?</p>
                   <button disabled={busy} onClick={() => void remove()}>

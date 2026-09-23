@@ -791,3 +791,13 @@ textarea {
     flex-shrink: 0;
   }
 }
+
+.heart:disabled {
+  cursor: default;
+}
+textarea[readonly] {
+  border-color: transparent;
+  background: transparent;
+  padding-left: 0;
+  resize: none;
+}
